@@ -1,0 +1,11 @@
+{
+  "model_id": "modelo_demo_1",
+  "description": "Modelo lineal simple para pruebas",
+  "expression": "a * x + b * y",
+  "variables": {
+    "a": { "dist": "uniform", "min": 1, "max": 5 },
+    "x": { "dist": "normal", "mu": 10, "sigma": 2 },
+    "b": { "dist": "uniform", "min": 0, "max": 1 },
+    "y": { "dist": "exponential", "lambda": 0.5 }
+  }
+}
