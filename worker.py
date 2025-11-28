@@ -10,7 +10,7 @@ import time
 import math
 import socket
 
-# Configuración compartida (Mismas credenciales que tu producer.py)
+
 RABBITMQ_HOST = "localhost"
 RABBITMQ_PORT = 5672
 RABBITMQ_USER = "Isaac_mrls"
@@ -36,7 +36,7 @@ class MonteCarloWorker:
         self.connection = pika.BlockingConnection(params)
         self.channel = self.connection.channel()
         
-        # Declarar colas (Idempotente)
+        # Declarar colas 
         self.channel.queue_declare(queue=QUEUE_MODEL, durable=True)
         self.channel.queue_declare(queue=QUEUE_SCENARIOS, durable=True)
         self.channel.queue_declare(queue=QUEUE_RESULTS, durable=True)
@@ -59,10 +59,10 @@ class MonteCarloWorker:
                 print(f"[{self.worker_id}] Modelo cargado: {self.model_id}")
                 print(f"[{self.worker_id}] Expresión a evaluar: {self.expression}")
                 
-                # REQUEUE=True es vital aquí. 
+
                 # Si hay múltiples workers, todos necesitan leer el modelo. 
                 # Al devolverlo a la cola, otros workers pueden leerlo también.
-                # (En producción real se usaría un Exchange Fanout, pero esto cumple con el requisito de "leer de la cola")
+                
                 self.channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
             else:
                 time.sleep(1) # Esperar un poco antes de reintentar
@@ -72,11 +72,11 @@ class MonteCarloWorker:
         # Contexto matemático seguro (permitimos funciones de math)
         safe_dict = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
         
-        # Inyectamos las variables del escenario (a, b, x, y...)
+        # Variables del escenario (a, b, x, y...)
         safe_dict.update(variables)
         
         try:
-            # Evaluamos la expresión string (ej: "a * x + b")
+            # Evaluamos la expresión string
             return eval(self.expression, {"__builtins__": {}}, safe_dict)
         except Exception as e:
             print(f"Error evaluando: {e}")
@@ -112,9 +112,8 @@ class MonteCarloWorker:
                 properties=pika.BasicProperties(delivery_mode=2)
             )
             
-            # 4. Confirmar procesamiento (Ack)
+            # 4. Confirmar procesamiento 
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            # Log ligero para no saturar consola
             if scenario['scenario_id'] % 50 == 0:
                 print(f"[{self.worker_id}] Procesado ID {scenario['scenario_id']} -> {resultado_valor:.4f}")
 
